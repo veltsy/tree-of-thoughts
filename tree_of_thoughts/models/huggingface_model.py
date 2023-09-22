@@ -1,13 +1,16 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import pipeline
 from tree_of_thoughts.models.abstract_language_model import AbstractLanguageModel
+import logging
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class HuggingLanguageModel(AbstractLanguageModel):
     def __init__(self, model_name, model_tokenizer=None, verbose=False):
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_tokenizer or model_name)
-        self.verbose = verbose
+        self.verbose = verbose 
 
     def generate_thoughts(self, state, k, max_length=100):
         state_text = ' '.join(state)
@@ -27,6 +30,29 @@ class HuggingLanguageModel(AbstractLanguageModel):
             thoughts = []
 
         return thoughts
+    
+    def generate_solution(self, initial_prompt, state, rejected_solutions=None):
+        try:
+                
+            if isinstance(state, list):
+                state_text = '\n'.join(state)
+            else:
+                state_text = state
+            
+            prompt = f"""You're an TreeofThoughts, an superintelligent AI model devoted to helping Humans by any means necessary. You're purpose is to generate a series of solutions to comply with the user's instructions, you must generate solutions on the basis of determining the most reliable solution in the shortest amount of time, while taking rejected solutions into account and learning from them. 
+            Considering the reasoning provided:\n\n
+            ###'{state_text}'\n\n###
+            Devise the best possible solution for the task: {initial_prompt}, Here are evaluated solutions that were rejected: 
+            ###{rejected_solutions}###, 
+            complete the {initial_prompt} without making the same mistakes you did with the evaluated rejected solutions. Be simple. Be direct. Provide intuitive solutions as soon as you think of them."""
+            answer = self.model.generate(prompt, num_return_sequence=1, max_length=10)
+            print(f'Answerrrrrr {answer}')
+            # print(thoughts)
+            # print(f"General Solution : {answer}")
+            return answer
+        except Exception as e:
+            logger.error(f"Error in generate_solutions: {e}")
+            return None
 
     def evaluate_states(self, states, initial_prompt, max_length=10):
         state_values = {}
