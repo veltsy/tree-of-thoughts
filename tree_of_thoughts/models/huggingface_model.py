@@ -45,7 +45,7 @@ class HuggingLanguageModel(AbstractLanguageModel):
             Devise the best possible solution for the task: {initial_prompt}, Here are evaluated solutions that were rejected: 
             ###{rejected_solutions}###, 
             complete the {initial_prompt} without making the same mistakes you did with the evaluated rejected solutions. Be simple. Be direct. Provide intuitive solutions as soon as you think of them."""
-            answer = self.model.generate(prompt, num_return_sequence=1, max_length=10)
+            answer = self.model.generate(**prompt, num_return_sequences=1)
             print(f'Answerrrrrr {answer}')
             # print(thoughts)
             # print(f"General Solution : {answer}")
